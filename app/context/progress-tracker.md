@@ -34,7 +34,11 @@ change.
 - Implemented Project Dialogs (Create, Rename, Delete) using React Context state, live slug previews, autofocus fields, Enter-key submission forms, and simulated loading states.
 - Updated slug generator (generateSlug) to preserve special characters (such as !!!) so they are displayed in the slug preview block rather than stripping them into empty strings.
 - Integrated sidebar actions (rename & delete icons on hover) exclusively for owned projects, and hid actions for collaborator/shared projects.
-- Configured mobile layout responsive backdrop overlay to dismiss the sidebar on mobile tap.
+- Configured Prisma database models and singleton client setup:
+  - Created `prisma/model/project.prisma` containing Project (ownerId, name, description, status, `cancasJsonPath`, timestamps, indexes) and ProjectCollaborator (cascade delete relation to Project, collaborator email, creation timestamp, unique constraint, indexes) schemas using Prisma's multi-file schema feature
+  - Configured `lib/prisma.ts` as a cached client singleton with dynamic branching for standard PostgreSQL or Prisma Accelerate depending on the `DATABASE_URL` protocol
+  - Executed first migration and regenerated Prisma Client successfully
+  - Verified production Next.js build compilation is clean
 
 ## In Progress
 
