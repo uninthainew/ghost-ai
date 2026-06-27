@@ -5,7 +5,7 @@ change.
 
 ## Current Phase
 
-- Completed (Phase 3: Auth Integration)
+- Completed (Phase 4: Project Dialogs & Editor Home)
 
 ## Current Goal
 
@@ -30,6 +30,11 @@ change.
   - Created responsive, minimal custom `/sign-in` and `/sign-up` pages (two-panel on large screens, single panel Clerk form on small screens) with no gradients or oversized hero elements
   - Added Clerk's built-in `UserButton` to the right section of the `EditorNavbar`
   - Verified production build compile and TypeScript type check passes cleanly
+- Implemented `/editor` minimalist home screen with centered heading and "New Project" trigger.
+- Implemented Project Dialogs (Create, Rename, Delete) using React Context state, live slug previews, autofocus fields, Enter-key submission forms, and simulated loading states.
+- Updated slug generator (generateSlug) to preserve special characters (such as !!!) so they are displayed in the slug preview block rather than stripping them into empty strings.
+- Integrated sidebar actions (rename & delete icons on hover) exclusively for owned projects, and hid actions for collaborator/shared projects.
+- Configured mobile layout responsive backdrop overlay to dismiss the sidebar on mobile tap.
 
 ## In Progress
 

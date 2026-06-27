@@ -3,6 +3,8 @@
 import * as React from "react"
 import { EditorNavbar } from "@/components/editor/editor-navbar"
 import { ProjectSidebar } from "@/components/editor/project-sidebar"
+import { ProjectProvider } from "@/components/editor/project-context"
+import { ProjectDialogs } from "@/components/editor/project-dialogs"
 
 export default function EditorLayout({
   children,
@@ -12,18 +14,21 @@ export default function EditorLayout({
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <EditorNavbar
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
-      />
-      <div className="relative flex flex-1 overflow-hidden">
-        <ProjectSidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
+    <ProjectProvider>
+      <div className="flex min-h-screen flex-col bg-background">
+        <EditorNavbar
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
         />
-        {children}
+        <div className="relative flex flex-1 overflow-hidden">
+          <ProjectSidebar
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+          />
+          {children}
+        </div>
       </div>
-    </div>
+      <ProjectDialogs />
+    </ProjectProvider>
   )
 }
