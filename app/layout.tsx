@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,11 +25,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+    <ClerkProvider
+      afterSignOutUrl="/sign-in"
+      appearance={{
+        theme: dark,
+        variables: {
+          fontFamily: "var(--font-sans)",
+          colorPrimary: "#00d2d2",
+          colorPrimaryForeground: "#000000",
+          colorBackground: "var(--background)",
+          colorForeground: "var(--foreground)",
+          colorMutedForeground: "var(--muted-foreground)",
+          colorBorder: "var(--border)",
+        },
+      }}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
-    </html>
+      <html
+        lang="en"
+        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      >
+        <body className="min-h-full flex flex-col">{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }
