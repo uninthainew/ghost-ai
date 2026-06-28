@@ -91,16 +91,18 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
               ) : (
                 <div className="flex-1 overflow-y-auto pr-1 space-y-1">
                   {myProjects.map((project) => (
-                    <Link
+                    <div
                       key={project.id}
-                      href={`/editor/${project.id}`}
-                      onClick={onClose}
                       className={cn(
-                        "group flex items-center justify-between rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent/50 transition-all duration-200 animate-in fade-in-50 cursor-pointer",
+                        "group relative flex items-center justify-between rounded-lg hover:bg-accent/50 transition-all duration-200 animate-in fade-in-50",
                         project.id === activeProjectId && "bg-accent/80 text-accent-foreground font-semibold"
                       )}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
+                      <Link
+                        href={`/editor/${project.id}`}
+                        onClick={onClose}
+                        className="flex flex-1 items-center gap-2.5 min-w-0 px-3 py-2 pr-14 text-sm text-foreground cursor-pointer"
+                      >
                         <Folder className={cn(
                           "h-4.5 w-4.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors",
                           project.id === activeProjectId && "text-primary"
@@ -108,8 +110,8 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
                         <span className="truncate font-medium text-foreground/90" title={project.name}>
                           {project.name}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      </Link>
+                      <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         <Button
                           variant="ghost"
                           size="icon-xs"
@@ -137,7 +139,7 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               )}

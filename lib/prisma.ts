@@ -11,7 +11,10 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma =
   globalForPrisma.prisma ??
   (() => {
-    if (databaseUrl?.startsWith("prisma+postgres://")) {
+    if (!databaseUrl) {
+      throw new Error("DATABASE_URL environment variable is not set.");
+    }
+    if (databaseUrl.startsWith("prisma+postgres://")) {
       return new PrismaClient({
         accelerateUrl: databaseUrl,
       });

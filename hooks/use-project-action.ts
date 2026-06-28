@@ -85,6 +85,7 @@ export function useProjectAction() {
 
         const project = await res.json()
         closeDialog()
+        router.refresh()
         router.push(`/editor/${project.id}`)
       } else if (dialog.type === "rename" && dialog.project) {
         if (!formName.trim()) {
@@ -121,6 +122,7 @@ export function useProjectAction() {
         closeDialog()
         if (activeProjectId === targetId) {
           router.push("/editor")
+          router.refresh()
         } else {
           router.refresh()
         }

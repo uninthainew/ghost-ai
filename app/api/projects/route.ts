@@ -28,9 +28,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    const body = await req.json().catch(() => ({}));
-    const name = body.name?.trim() || "Untitled Project";
-    const id = body.id?.trim();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return Response.json({ error: "Bad Request: Invalid body payload" }, { status: 400 });
+    }
+
+    const name = typeof body.name === "string" ? body.name.trim() : "Untitled Project";
+    const id = typeof body.id === "string" ? body.id.trim() : undefined;
 
     const project = await prisma.project.create({
       data: {

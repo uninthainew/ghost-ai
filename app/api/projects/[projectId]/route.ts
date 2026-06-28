@@ -12,26 +12,38 @@ export async function PATCH(
 
   try {
     const { projectId } = await params;
-    const body = await req.json().catch(() => ({}));
-    const name = body.name?.trim() || "Untitled Project";
-
-    // 1. Fetch project to verify ownership
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
-
-    if (!project) {
-      return Response.json({ error: "Project not found" }, { status: 404 });
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return Response.json({ error: "Bad Request: Invalid body payload" }, { status: 400 });
     }
 
-    if (project.ownerId !== userId) {
+    if (typeof body.name !== "string" || !body.name.trim()) {
+      return Response.json({ error: "Bad Request: 'name' is required and must be a non-empty string" }, { status: 400 });
+    }
+    const name = body.name.trim();
+
+    // Perform atomic update restricted to owner
+    const result = await prisma.project.updateMany({
+      where: {
+        id: projectId,
+        ownerId: userId,
+      },
+      data: { name },
+    });
+
+    if (result.count === 0) {
+      const exists = await prisma.project.findUnique({
+        where: { id: projectId },
+      });
+      if (!exists) {
+        return Response.json({ error: "Project not found" }, { status: 404 });
+      }
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // 2. Perform the update
-    const updatedProject = await prisma.project.update({
+    // Retrieve the updated project to return
+    const updatedProject = await prisma.project.findUnique({
       where: { id: projectId },
-      data: { name },
     });
 
     return Response.json(updatedProject);
@@ -53,23 +65,23 @@ export async function DELETE(
   try {
     const { projectId } = await params;
 
-    // 1. Fetch project to verify ownership
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
+    // Perform atomic delete restricted to owner
+    const result = await prisma.project.deleteMany({
+      where: {
+        id: projectId,
+        ownerId: userId,
+      },
     });
 
-    if (!project) {
-      return Response.json({ error: "Project not found" }, { status: 404 });
-    }
-
-    if (project.ownerId !== userId) {
+    if (result.count === 0) {
+      const exists = await prisma.project.findUnique({
+        where: { id: projectId },
+      });
+      if (!exists) {
+        return Response.json({ error: "Project not found" }, { status: 404 });
+      }
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
-
-    // 2. Perform delete
-    await prisma.project.delete({
-      where: { id: projectId },
-    });
 
     return Response.json({ success: true });
   } catch (error) {
