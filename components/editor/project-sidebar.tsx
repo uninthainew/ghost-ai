@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
 import { X, Plus, Folder, Users, FolderKanban, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -19,6 +21,9 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
     openRenameDialog,
     openDeleteDialog,
   } = useProjectDialogs()
+
+  const params = useParams()
+  const activeProjectId = params?.projectId as string | undefined
 
   const myProjects = projects.filter((p) => p.isOwned)
   const sharedProjects = projects.filter((p) => !p.isOwned)
@@ -86,12 +91,20 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
               ) : (
                 <div className="flex-1 overflow-y-auto pr-1 space-y-1">
                   {myProjects.map((project) => (
-                    <div
+                    <Link
                       key={project.id}
-                      className="group flex items-center justify-between rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent/50 transition-all duration-200 animate-in fade-in-50"
+                      href={`/editor/${project.id}`}
+                      onClick={onClose}
+                      className={cn(
+                        "group flex items-center justify-between rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent/50 transition-all duration-200 animate-in fade-in-50 cursor-pointer",
+                        project.id === activeProjectId && "bg-accent/80 text-accent-foreground font-semibold"
+                      )}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <Folder className="h-4.5 w-4.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <Folder className={cn(
+                          "h-4.5 w-4.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors",
+                          project.id === activeProjectId && "text-primary"
+                        )} />
                         <span className="truncate font-medium text-foreground/90" title={project.name}>
                           {project.name}
                         </span>
@@ -101,6 +114,7 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
                           variant="ghost"
                           size="icon-xs"
                           onClick={(e) => {
+                            e.preventDefault()
                             e.stopPropagation()
                             openRenameDialog(project)
                           }}
@@ -113,6 +127,7 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
                           variant="ghost"
                           size="icon-xs"
                           onClick={(e) => {
+                            e.preventDefault()
                             e.stopPropagation()
                             openDeleteDialog(project)
                           }}
@@ -122,7 +137,7 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -143,12 +158,20 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
               ) : (
                 <div className="flex-1 overflow-y-auto pr-1 space-y-1">
                   {sharedProjects.map((project) => (
-                    <div
+                    <Link
                       key={project.id}
-                      className="group flex items-center justify-between rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent/50 transition-all duration-200"
+                      href={`/editor/${project.id}`}
+                      onClick={onClose}
+                      className={cn(
+                        "group flex items-center justify-between rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent/50 transition-all duration-200 cursor-pointer",
+                        project.id === activeProjectId && "bg-accent/80 text-accent-foreground font-semibold"
+                      )}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <Folder className="h-4.5 w-4.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <Folder className={cn(
+                          "h-4.5 w-4.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors",
+                          project.id === activeProjectId && "text-primary"
+                        )} />
                         <div className="flex flex-col min-w-0">
                           <span className="truncate font-medium text-foreground/90" title={project.name}>
                             {project.name}
@@ -158,7 +181,7 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
                           </span>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}
