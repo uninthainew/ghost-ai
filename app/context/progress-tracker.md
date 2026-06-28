@@ -5,13 +5,23 @@ change.
 
 ## Current Phase
 
-- Completed (Phase 4: Project Dialogs & Editor Home)
+- Completed (Phase 7: Wire Editor Home)
 
 ## Current Goal
 
 - Ready for next spec instructions.
 
 ## Completed
+
+- Wired the editor home sidebar and dialogs to the real database-backed project API:
+  - Created a database access helper `lib/projects.ts` to fetch user-related (owned and collaborator) projects.
+  - Converted the editor home page `/editor` and layout to Server Components, loading project lists server-side with no client-side fetching on initial load.
+  - Implemented the client-side interactive layout shell in `app/editor/layout-client.tsx` and custom client button `components/editor/new-project-button.tsx`.
+  - Created the custom React hook `hooks/use-project-action.ts` to handle project mutations (Create, Rename, Delete) and dialog states.
+  - Configured project ID and Liveblocks room ID alignment during project creation (uses slugified name + a short unique 5-char random suffix).
+  - Implemented dynamic project workspace route at `/editor/[projectId]` that verifies access rights (owner/collaborator) and displays details.
+  - Wired Sidebar project items as navigation links with active workspace styling.
+  - Verified compilation and type checking are fully clean with `npm run build`.
 
 - Initialized Next.js project with Tailwind v4
 - Installed and configured shadcn/ui (v4, base-nova style)
@@ -34,7 +44,18 @@ change.
 - Implemented Project Dialogs (Create, Rename, Delete) using React Context state, live slug previews, autofocus fields, Enter-key submission forms, and simulated loading states.
 - Updated slug generator (generateSlug) to preserve special characters (such as !!!) so they are displayed in the slug preview block rather than stripping them into empty strings.
 - Integrated sidebar actions (rename & delete icons on hover) exclusively for owned projects, and hid actions for collaborator/shared projects.
-- Configured mobile layout responsive backdrop overlay to dismiss the sidebar on mobile tap.
+- Configured Prisma database models and singleton client setup:
+  - Created `prisma/model/project.prisma` containing Project (ownerId, name, description, status, `cancasJsonPath`, timestamps, indexes) and ProjectCollaborator (cascade delete relation to Project, collaborator email, creation timestamp, unique constraint, indexes) schemas using Prisma's multi-file schema feature
+  - Configured `lib/prisma.ts` as a cached client singleton with dynamic branching for standard PostgreSQL or Prisma Accelerate depending on the `DATABASE_URL` protocol
+  - Executed first migration and regenerated Prisma Client successfully
+  - Verified production Next.js build compilation is clean
+- Implemented backend-only project API routes (`/api/projects` and `/api/projects/[projectId]`):
+  - `GET /api/projects`: Lists current user's owned and collaborator projects, querying the database using their Clerk authentication ID and email addresses.
+  - `POST /api/projects`: Creates a new project, defaulting missing project names to "Untitled Project".
+  - `PATCH /api/projects/[projectId]`: Renames a project, enforcing ownership checks (returns `403` for non-owners, `401` for unauthenticated requests).
+  - `DELETE /api/projects/[projectId]`: Deletes a project, enforcing ownership checks (returns `403` for non-owners, `401` for unauthenticated requests).
+  - Configured route handlers to support Next.js 16 dynamic parameters by treating `params` as a `Promise`.
+  - Verified compilation and type checking are fully clean with `npm run build`.
 
 ## In Progress
 
