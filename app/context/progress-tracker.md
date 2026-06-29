@@ -5,13 +5,34 @@ change.
 
 ## Current Phase
 
-- Completed (Phase 7: Wire Editor Home)
+- Completed (Phase 9: Share Dialog)
 
 ## Current Goal
 
 - Ready for next spec instructions.
 
 ## Completed
+
+- Implemented Project Share Dialog enabling project collaboration:
+  - Created backend endpoints (`app/api/projects/[projectId]/collaborators/route.ts`) supporting GET (listing members), POST (inviting collaborator), and DELETE (removing collaborator).
+  - Enforced server-side checks restricting invite/remove actions to the project owner, and restricted member listing to users with access (owner/collaborators).
+  - Integrated Clerk backend API (`clerkClient()`) to enrich collaborator emails with real display names and avatars where available, falling back to email-only for non-registered users.
+  - Extended project context (`project-context.tsx`) and hook (`use-project-action.ts`) to manage share dialog lifecycle state.
+  - Implemented `<ShareDialog />` modal (`components/editor/share-dialog.tsx`) that retrieves member list, lets owners invite/delete collaborators and copy the workspace link (with a 2-second clipboard feedback notification), and shows a read-only member list to collaborators.
+  - Registered `<ShareDialog />` in the global `ProjectDialogs` manager (`components/editor/project-dialogs.tsx`) and wired the Editor navbar "Share" button (`components/editor/editor-navbar.tsx`) to open it.
+  - Repaired a syntax corruption in the sidebar workspace items list (`components/editor/project-sidebar.tsx`).
+  - Verified a clean compilation and TypeScript type checking using `npm run build`.
+
+- Implemented `/editor/[roomId]` workspace shell layout and server-side access control checks:
+  - Created `lib/project-access.ts` to fetch Clerk identity and verify user access permissions (owner/collaborator) for a project.
+  - Implemented `<AccessDenied />` screen styled with a custom layout, lock icon, and back-navigation link.
+  - Renamed the dynamic folder path from `[projectId]` to `[roomId]` and refactored route references in `project-sidebar.tsx` and `use-project-action.ts` to use the `roomId` path parameter.
+  - Implemented `app/editor/[roomId]/page.tsx` and `workspace-view.tsx` representing a server-checked shell holding a dark canvas node diagram mockup, and an interactive right-sidebar AI Chat panel.
+  - Customized `editor-navbar.tsx` to dynamically show the project name, a dummy "Share" action, and a "AI Assistant" toggle button wired to the chat sidebar context.
+  - Resolved dynamic project updates in the sidebar by implementing client-side projects state in `ProjectProvider` synced with Clerk client context and updated upon successful mutations.
+  - Linked the navbar project title back to `/editor` to support workspace exit navigation.
+  - Automated sidebar closure upon project creation by managing sidebar open state globally in `ProjectProvider` and closing it via programmatic callback in `useProjectAction`.
+  - Verified a clean compilation and TypeScript type checking using `npm run build`.
 
 - Wired the editor home sidebar and dialogs to the real database-backed project API:
   - Created a database access helper `lib/projects.ts` to fetch user-related (owned and collaborator) projects.
@@ -63,7 +84,7 @@ change.
 
 ## Next Up
 
-- [Next feature to build]
+- Phase 9: Liveblocks Integration or Canvas Logic.
 
 ## Open Questions
 

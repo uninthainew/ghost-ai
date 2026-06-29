@@ -5,10 +5,13 @@ import { useRouter, useParams } from "next/navigation"
 import { Project, DialogState } from "@/components/editor/project-context"
 import { generateSlug } from "@/components/editor/project-context"
 
-export function useProjectAction() {
+export function useProjectAction(
+  onSuccess?: () => Promise<void> | void,
+  onCreated?: () => void
+) {
   const router = useRouter()
   const params = useParams()
-  const activeProjectId = params?.projectId as string | undefined
+  const activeRoomId = params?.roomId as string | undefined
 
   const [dialog, setDialog] = React.useState<DialogState>({
     type: null,
@@ -43,6 +46,12 @@ export function useProjectAction() {
     setDialog({ type: "delete", project, isLoading: false })
   }
 
+  const openShareDialog = (project: Project) => {
+    setFormNameState("")
+    setFormSlug("")
+    setDialog({ type: "share", project, isLoading: false })
+  }
+
   const closeDialog = () => {
     if (dialog.isLoading) return
     setDialog({ type: null, project: null, isLoading: false })
@@ -53,6 +62,7 @@ export function useProjectAction() {
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!dialog.type || dialog.isLoading) return
+    if (dialog.type === "share") return
 
     setDialog((prev) => ({ ...prev, isLoading: true }))
 
@@ -85,7 +95,8 @@ export function useProjectAction() {
 
         const project = await res.json()
         closeDialog()
-        router.refresh()
+        if (onSuccess) await onSuccess()
+        if (onCreated) onCreated()
         router.push(`/editor/${project.id}`)
       } else if (dialog.type === "rename" && dialog.project) {
         if (!formName.trim()) {
@@ -108,7 +119,7 @@ export function useProjectAction() {
         }
 
         closeDialog()
-        router.refresh()
+        if (onSuccess) await onSuccess()
       } else if (dialog.type === "delete" && dialog.project) {
         const targetId = dialog.project.id
         const res = await fetch(`/api/projects/${targetId}`, {
@@ -120,11 +131,9 @@ export function useProjectAction() {
         }
 
         closeDialog()
-        if (activeProjectId === targetId) {
+        if (onSuccess) await onSuccess()
+        if (activeRoomId === targetId) {
           router.push("/editor")
-          router.refresh()
-        } else {
-          router.refresh()
         }
       }
     } catch (error) {
@@ -140,6 +149,7 @@ export function useProjectAction() {
     openCreateDialog,
     openRenameDialog,
     openDeleteDialog,
+    openShareDialog,
     closeDialog,
     setFormName,
     handleSubmit,

@@ -10,20 +10,25 @@ import { cn } from "@/lib/utils"
 import { useProjectDialogs } from "./project-context"
 
 interface ProjectSidebarProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen?: boolean
+  onClose?: () => void
 }
 
-export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
+export function ProjectSidebar({ isOpen: propIsOpen, onClose: propOnClose }: ProjectSidebarProps) {
   const {
     projects,
     openCreateDialog,
     openRenameDialog,
     openDeleteDialog,
+    isSidebarOpen,
+    setSidebarOpen,
   } = useProjectDialogs()
 
+  const isOpen = propIsOpen !== undefined ? propIsOpen : isSidebarOpen
+  const onClose = propOnClose || (() => setSidebarOpen(false))
+
   const params = useParams()
-  const activeProjectId = params?.projectId as string | undefined
+  const activeRoomId = params?.roomId as string | undefined
 
   const myProjects = projects.filter((p) => p.isOwned)
   const sharedProjects = projects.filter((p) => !p.isOwned)
@@ -95,7 +100,7 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
                       key={project.id}
                       className={cn(
                         "group relative flex items-center justify-between rounded-lg hover:bg-accent/50 transition-all duration-200 animate-in fade-in-50",
-                        project.id === activeProjectId && "bg-accent/80 text-accent-foreground font-semibold"
+                        project.id === activeRoomId && "bg-accent/80 text-accent-foreground font-semibold"
                       )}
                     >
                       <Link
@@ -105,7 +110,7 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
                       >
                         <Folder className={cn(
                           "h-4.5 w-4.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors",
-                          project.id === activeProjectId && "text-primary"
+                          project.id === activeRoomId && "text-primary"
                         )} />
                         <span className="truncate font-medium text-foreground/90" title={project.name}>
                           {project.name}
@@ -166,13 +171,13 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
                       onClick={onClose}
                       className={cn(
                         "group flex items-center justify-between rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent/50 transition-all duration-200 cursor-pointer",
-                        project.id === activeProjectId && "bg-accent/80 text-accent-foreground font-semibold"
+                        project.id === activeRoomId && "bg-accent/80 text-accent-foreground font-semibold"
                       )}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Folder className={cn(
                           "h-4.5 w-4.5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors",
-                          project.id === activeProjectId && "text-primary"
+                          project.id === activeRoomId && "text-primary"
                         )} />
                         <div className="flex flex-col min-w-0">
                           <span className="truncate font-medium text-foreground/90" title={project.name}>

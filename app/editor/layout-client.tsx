@@ -14,20 +14,12 @@ export function EditorLayoutClient({
   children: React.ReactNode
   initialProjects: Project[]
 }) {
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
-
   return (
     <ProjectProvider initialProjects={initialProjects}>
       <div className="flex min-h-screen flex-col bg-background">
-        <EditorNavbar
-          sidebarOpen={sidebarOpen}
-          onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
-        />
+        <EditorNavbar />
         <div className="relative flex flex-1 overflow-hidden">
-          <ProjectSidebar
-            isOpen={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-          />
+          <ProjectSidebar />
           {children}
         </div>
       </div>
