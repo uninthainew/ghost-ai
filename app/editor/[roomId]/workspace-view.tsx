@@ -9,21 +9,12 @@ import {
   Type,
   Image as ImageIcon,
   ArrowRight,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
   Sparkles,
-  Send,
-  Globe,
-  Cpu,
-  Database,
-  HelpCircle,
-  Play,
-  Layers,
-  Settings
+  Send
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { CanvasWrapper } from "@/components/editor/canvas-wrapper"
 
 interface ProjectType {
   id: string
@@ -37,7 +28,6 @@ interface WorkspaceViewProps {
 
 export function WorkspaceView({ project }: WorkspaceViewProps) {
   const { isAiOpen } = useProjectDialogs()
-  const [zoom, setZoom] = React.useState(100)
   const [activeTool, setActiveTool] = React.useState<"select" | "rect" | "circle" | "text" | "image" | "line">("select")
   const [aiInput, setAiInput] = React.useState("")
 
@@ -46,14 +36,8 @@ export function WorkspaceView({ project }: WorkspaceViewProps) {
       {/* Central Canvas Workspace */}
       <main className="flex-1 flex flex-col bg-[#0f0f11] relative overflow-hidden select-none">
 
-        {/* SVG Dot Grid Background */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-50"
-          style={{
-            backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px)",
-            backgroundSize: "24px 24px"
-          }}
-        />
+        {/* Liveblocks Collaborative React Flow Canvas */}
+        <CanvasWrapper roomId={project.id} />
 
         {/* Canvas Toolbar (Floating at Top) */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 bg-background/80 backdrop-blur-md border border-border/40 p-1.5 rounded-xl shadow-xl animate-in fade-in-50 slide-in-from-top-2 duration-300">
@@ -112,127 +96,6 @@ export function WorkspaceView({ project }: WorkspaceViewProps) {
           >
             <ArrowRight className="h-4 w-4" />
           </Button>
-        </div>
-
-        {/* Mock Architecture Nodes (Visual Showcase) */}
-        <div className="flex-1 relative flex items-center justify-center">
-
-          {/* Connector SVGs */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="grad-web-api" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#a855f7" stopOpacity="0.4" />
-              </linearGradient>
-              <linearGradient id="grad-api-db" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#a855f7" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#10b981" stopOpacity="0.4" />
-              </linearGradient>
-            </defs>
-            {/* Lines */}
-            <path
-              d="M 370 300 C 440 300, 440 300, 500 300"
-              fill="none"
-              stroke="url(#grad-web-api)"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-              className="animate-[dash_20s_linear_infinite]"
-            />
-            <path
-              d="M 680 300 C 740 300, 740 300, 810 300"
-              fill="none"
-              stroke="url(#grad-api-db)"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-              className="animate-[dash_20s_linear_infinite]"
-            />
-          </svg>
-
-          {/* Node 1: Next.js Client App */}
-          <div className="absolute left-[160px] top-[250px] w-52 bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/30 hover:border-blue-500/60 rounded-xl p-4 shadow-[0_0_20px_rgba(59,130,246,0.1)] transition-all duration-300 group cursor-grab active:cursor-grabbing">
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-400 group-hover:scale-105 transition-transform duration-200">
-                <Globe className="h-4.5 w-4.5" />
-              </div>
-              <span className="font-heading text-xs font-semibold text-blue-100 tracking-wide">WEB CLIENT</span>
-            </div>
-            <h4 className="text-sm font-semibold text-foreground/90">Next.js Client</h4>
-            <p className="text-[11px] text-muted-foreground mt-1">Vercel Edge Network</p>
-          </div>
-
-          {/* Node 2: API Gateway / Backend */}
-          <div className="absolute left-[480px] top-[250px] w-52 bg-purple-500/5 hover:bg-purple-500/10 border border-purple-500/30 hover:border-purple-500/60 rounded-xl p-4 shadow-[0_0_20px_rgba(168,85,247,0.1)] transition-all duration-300 group cursor-grab active:cursor-grabbing">
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className="p-1.5 rounded-lg bg-purple-500/15 text-purple-400 group-hover:scale-105 transition-transform duration-200">
-                <Cpu className="h-4.5 w-4.5" />
-              </div>
-              <span className="font-heading text-xs font-semibold text-purple-100 tracking-wide">COMPUTE LAYER</span>
-            </div>
-            <h4 className="text-sm font-semibold text-foreground/90">API Server</h4>
-            <p className="text-[11px] text-muted-foreground mt-1">Docker • Node.js ECS</p>
-          </div>
-
-          {/* Node 3: PostgreSQL Database */}
-          <div className="absolute left-[800px] top-[250px] w-52 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500/60 rounded-xl p-4 shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all duration-300 group cursor-grab active:cursor-grabbing">
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-400 group-hover:scale-105 transition-transform duration-200">
-                <Database className="h-4.5 w-4.5" />
-              </div>
-              <span className="font-heading text-xs font-semibold text-emerald-100 tracking-wide">DATABASE</span>
-            </div>
-            <h4 className="text-sm font-semibold text-foreground/90">PostgreSQL DB</h4>
-            <p className="text-[11px] text-muted-foreground mt-1">Prisma Schema • AWS RDS</p>
-          </div>
-
-          {/* Central Instruction Message */}
-          <div className="absolute bottom-20 text-center max-w-sm pointer-events-none p-4 rounded-xl bg-background/5 border border-border/10 backdrop-blur-xs select-none">
-            <p className="text-xs text-muted-foreground/80 leading-relaxed font-medium">
-              Interact with the architectural nodes or use the AI Side Panel to add components.
-            </p>
-          </div>
-        </div>
-
-        {/* Zoom Controls (Floating Bottom Left) */}
-        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-1.5 bg-background/80 backdrop-blur-md border border-border/40 p-1 rounded-xl shadow-lg">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => setZoom(Math.max(50, zoom - 10))}
-            title="Zoom Out"
-            className="h-7 w-7 rounded-lg"
-          >
-            <ZoomOut className="h-3.5 w-3.5" />
-          </Button>
-          <span className="text-xs font-mono font-medium px-2 min-w-[3rem] text-center text-foreground/80">
-            {zoom}%
-          </span>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => setZoom(Math.min(200, zoom + 10))}
-            title="Zoom In"
-            className="h-7 w-7 rounded-lg"
-          >
-            <ZoomIn className="h-3.5 w-3.5" />
-          </Button>
-          <div className="w-[1px] h-4 bg-border/40 mx-0.5 shrink-0" />
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => setZoom(100)}
-            title="Reset Zoom"
-            className="h-7 w-7 rounded-lg"
-          >
-            <Maximize2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-
-        {/* Layer / Status Indicator (Floating Bottom Right) */}
-        <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2 bg-background/80 backdrop-blur-md border border-border/40 px-3 py-1.5 rounded-xl shadow-lg">
-          <Layers className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[10px] font-medium tracking-wide uppercase text-muted-foreground font-mono">
-            3 Active Nodes
-          </span>
         </div>
       </main>
 
