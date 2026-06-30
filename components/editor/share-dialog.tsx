@@ -44,6 +44,12 @@ export function ShareDialog() {
     }
   }, [dialog.type, project, closeDialog])
 
+  const activeProjectIdRef = React.useRef<string | null>(null)
+
+  React.useEffect(() => {
+    activeProjectIdRef.current = project?.id ?? null
+  }, [project?.id])
+
   const [loading, setLoading] = React.useState(false)
   const [data, setData] = React.useState<FetchResponse | null>(null)
   const [inviteEmail, setInviteEmail] = React.useState("")
@@ -61,17 +67,17 @@ export function ShareDialog() {
       const res = await fetch(`/api/projects/${currentProjectId}/collaborators`, { signal })
       if (!res.ok) throw new Error("Failed to fetch collaborators")
       const result = await res.json()
-      if (project?.id === currentProjectId) {
+      if (activeProjectIdRef.current === currentProjectId) {
         setData(result)
       }
     } catch (err: any) {
       if (err?.name === "AbortError") return
       console.error(err)
-      if (project?.id === currentProjectId) {
+      if (activeProjectIdRef.current === currentProjectId) {
         setError(err.message || "An error occurred while loading collaborators")
       }
     } finally {
-      if (project?.id === currentProjectId) {
+      if (activeProjectIdRef.current === currentProjectId) {
         setLoading(false)
       }
     }
