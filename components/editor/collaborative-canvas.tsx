@@ -89,9 +89,9 @@ export function CollaborativeCanvas() {
   const canUndo = useCanUndo()
   const canRedo = useCanRedo()
 
-  useKeyboardShortcuts(reactFlowInstance, undo, redo)
-
   const [isTemplateModalOpen, setIsTemplateModalOpen] = React.useState(false)
+
+  useKeyboardShortcuts(reactFlowInstance, undo, redo, isTemplateModalOpen)
 
   const handleImportTemplate = React.useCallback(
     (template: CanvasTemplate) => {
@@ -261,6 +261,7 @@ export function CollaborativeCanvas() {
             onClick={() => zoomOut({ duration: 300 })}
             className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
             title="Zoom Out (-)"
+            aria-label="Zoom Out"
           >
             <ZoomOut className="h-4 w-4" />
           </button>
@@ -268,6 +269,7 @@ export function CollaborativeCanvas() {
             onClick={() => fitView({ duration: 300 })}
             className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
             title="Fit View (Cmd/Ctrl + 0)"
+            aria-label="Fit View"
           >
             <Maximize className="h-4 w-4" />
           </button>
@@ -275,6 +277,7 @@ export function CollaborativeCanvas() {
             onClick={() => zoomIn({ duration: 300 })}
             className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
             title="Zoom In (+)"
+            aria-label="Zoom In"
           >
             <ZoomIn className="h-4 w-4" />
           </button>
@@ -294,6 +297,7 @@ export function CollaborativeCanvas() {
                 : "text-zinc-600 opacity-40 cursor-not-allowed"
             }`}
             title="Undo (Cmd/Ctrl + Z)"
+            aria-label="Undo"
           >
             <Undo className="h-4 w-4" />
           </button>
@@ -306,6 +310,7 @@ export function CollaborativeCanvas() {
                 : "text-zinc-600 opacity-40 cursor-not-allowed"
             }`}
             title="Redo (Cmd/Ctrl + Shift + Z / Cmd/Ctrl + Y)"
+            aria-label="Redo"
           >
             <Redo className="h-4 w-4" />
           </button>

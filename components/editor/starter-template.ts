@@ -48,6 +48,9 @@ function createEdge(
     source,
     target,
     label,
+    data: {
+      label,
+    },
     type: "customEdge",
   }
 }

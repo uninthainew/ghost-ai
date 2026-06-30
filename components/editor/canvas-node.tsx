@@ -97,11 +97,6 @@ export function CanvasNodeComponent({ id, data, selected }: NodeProps<CanvasNode
     )
   }
 
-  // Sync internal input value when node data.label changes externally
-  React.useEffect(() => {
-    setInputValue(data.label || "")
-  }, [data.label])
-
   // Focus and select textarea text on start editing
   React.useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -112,6 +107,7 @@ export function CanvasNodeComponent({ id, data, selected }: NodeProps<CanvasNode
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
+    setInputValue(data.label || "")
     setIsEditing(true)
   }
 

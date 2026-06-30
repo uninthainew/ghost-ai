@@ -6,11 +6,16 @@ type ReactFlowInstance = ReturnType<typeof useReactFlow>
 export function useKeyboardShortcuts(
   reactFlowInstance: ReactFlowInstance,
   undo: () => void,
-  redo: () => void
+  redo: () => void,
+  disabled = false
 ) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // 1. Ignore shortcuts when typing in inputs, textareas, or editable elements
+      if (disabled) {
+        return
+      }
+
+      // 1. Ignore shortcuts when typing in inputs, textareas, or editable elements, or if inside a dialog
       const target = event.target as HTMLElement | null
       const activeEl = document.activeElement as HTMLElement | null
 
@@ -26,7 +31,17 @@ export function useKeyboardShortcuts(
         )
       }
 
-      if (isEditable(target) || isEditable(activeEl)) {
+      const isInsideDialog = (el: HTMLElement | null) => {
+        if (!el) return false
+        return !!el.closest("dialog, [role=\"dialog\"]")
+      }
+
+      if (
+        isEditable(target) ||
+        isEditable(activeEl) ||
+        isInsideDialog(target) ||
+        isInsideDialog(activeEl)
+      ) {
         return
       }
 
@@ -81,5 +96,5 @@ export function useKeyboardShortcuts(
     return () => {
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [reactFlowInstance, undo, redo])
+  }, [reactFlowInstance, undo, redo, disabled])
 }

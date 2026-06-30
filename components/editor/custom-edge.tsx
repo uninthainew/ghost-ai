@@ -34,11 +34,6 @@ export function CustomEdge({
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [inputWidth, setInputWidth] = React.useState(60)
 
-  // Sync internal state with data.label updates (collaborators' changes)
-  React.useEffect(() => {
-    setInputValue((data?.label as string) || "")
-  }, [data?.label])
-
   // Adjust input width based on current text width
   React.useEffect(() => {
     if (spanRef.current) {
@@ -64,6 +59,7 @@ export function CustomEdge({
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
+    setInputValue((data?.label as string) || "")
     setIsEditing(true)
   }
 
