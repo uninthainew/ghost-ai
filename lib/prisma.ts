@@ -19,7 +19,11 @@ export const prisma =
         accelerateUrl: databaseUrl,
       });
     } else {
-      const pool = new pg.Pool({ connectionString: databaseUrl });
+      const pool = new pg.Pool({
+        connectionString: databaseUrl,
+        max: process.env.NODE_ENV === "production" ? undefined : 1,
+        idleTimeoutMillis: process.env.NODE_ENV === "production" ? undefined : 5000,
+      });
       const adapter = new PrismaPg(pool);
       return new PrismaClient({ adapter });
     }
