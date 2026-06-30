@@ -24,6 +24,7 @@ export function generateSlug(name: string): string {
     .toLowerCase()
     .trim()
     .replace(/[\s_]+/g, "-") // Replace spaces and underscores with hyphens
+    .replace(/[\/\?#%\\&]+/g, "-") // Replace URL-breaking characters with hyphens
     .replace(/-+/g, "-") // Replace multiple hyphens with a single hyphen
     .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens (if any, like from spaces at start/end)
 }

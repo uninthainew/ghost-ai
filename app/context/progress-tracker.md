@@ -5,13 +5,68 @@ change.
 
 ## Current Phase
 
-- Completed (Phase 12: Shape Panel)
+- Completed (Phase 18: Starter Template Library)
 
 ## Current Goal
 
 - Ready for next spec instructions.
 
 ## Completed
+
+- Implemented Phase 18: Starter Template Library:
+  - Created `components/editor/starter-template.ts` defining `CanvasTemplate` type and `CANVAS_TEMPLAES` array alias.
+  - Implemented three pre-built system architectures (Microservices, CI/CD Pipeline, Event-Driven System) utilizing existing shapes and the `NODE_COLOR_PALETTE`.
+  - Created `components/editor/starter-template-modal.tsx` and `components/editor/starter-template-model.tsx` displaying the templates in a scrollable grid.
+  - Added pure-SVG lightweight previews matching node shapes, colors, label text, and drawing edges between centers without rendering a React Flow instance.
+  - Integrated the templates modal with the collaborative canvas in `components/editor/collaborative-canvas.tsx`, exposing a "Templates" trigger in the bottom-left control bar and handling room-synchronized import replacement via `setNodes`/`setEdges` and `fitView`.
+  - Verified compilation and Next.js build type check compile cleanly.
+
+- Implemented Phase 17: Canvas Ergonomics feature:
+  - Added a floating pill-shaped control bar at the bottom-left of the canvas.
+  - Included a zoom control group: Zoom Out, Fit View, and Zoom In using React Flow's `useReactFlow` instance with a smooth transition.
+  - Included a history control group: Undo and Redo wired to Liveblocks history (`useUndo`/`useRedo` / `useCanUndo`/`useCanRedo`).
+  - Added visual states for history buttons: disabled buttons are visually dimmed, active buttons support scale/background on hover.
+  - Implemented a custom React hook `useKeyboardShortcuts` in `hooks/useKeyboardShortcuts.ts` to listen for keyboard shortcuts on `windows` (Zoom In with `+`/`=`, Zoom Out with `-`, Undo with `Cmd/Ctrl + z`, Redo with `Cmd/Ctrl + Shift + z` or `Cmd/Ctrl + y`, and Fit View with `Cmd/Ctrl + 0`).
+  - Configured shortcut listening to completely ignore commands when typing in inputs, textareas, select tags, or contenteditable fields.
+
+- Implemented Phase 16: Edge Behavior feature:
+  - Replaced the default canvas edges with custom edges to provide clean, easy-to-follow flow lines and seamless interactions.
+  - Placed interactive source handles on the Top, Bottom, Left, and Right of all canvas nodes to allow connecting from any handle to any other handle under `ConnectionMode.Loose`.
+  - Configured handles with a subtle style: a small white dot with a dark border (`border-zinc-950`), fading in on node hover.
+  - Implemented custom edge renderer utilizing `getSmoothStepPath` with `borderRadius: 8` for right-angle routing.
+  - Added visual states for edges: slightly dimmed at rest (`#52525b`), brightening when hovered (`#a1a1aa`) or selected (`#e4e4e7`).
+  - Rendered a wider transparent interaction path (`strokeWidth={15}`) to make hover and click targets easier without increasing the visible edge thickness.
+  - Enabled inline edge label editing on double-click of both the edge path and the label itself using React Flow's `EdgeLabelRenderer` and path midpoint coordinates.
+  - Added an auto-expanding input box utilizing a hidden layout `span` to measure text width and size the input dynamically.
+  - Integrated real-time edge label updates to the collaborative canvas state using React Flow's `setEdges`.
+
+- Implemented Phase 15: Node Color Toolbar feature:
+  - Defined the floating node color palette (Slate/Default, Blue, Green, Purple, Amber, Rose) in `types/canvas.ts` with matching text/label color pairs.
+  - Implemented a floating color toolbar above selected canvas nodes in `components/editor/canvas-node.tsx` absolute-positioned, visible only when the node is selected and not in editing mode.
+  - Configured click and drag event propagation prevention on the toolbar using `.nodrag` and `.nopan` classes and custom stop propagation event handlers to prevent canvas panning and node dragging.
+  - Added swatch button hover state with tight, controlled glowing effects based on the swatch text color.
+  - Integrated state updates using React Flow's `setNodes` to update both `data.color` and `data.textColor` in the collaborative state in real-time.
+  - Configured HTML shape background, SVG shape fill, and label text color to dynamically reflect the selected color pair.
+  - Updated the `<MiniMap>` nodeColor function in `components/editor/collaborative-canvas.tsx` to dynamically render nodes matching their custom color state.
+  - Verified Next.js build compilation and type-checking are fully clean using `npm run build`.
+
+- Implemented Phase 14: Node Editing feature:
+  - Integrated React Flow `<NodeResizer>` inside `components/editor/canvas-node.tsx` bound to selection state (`isVisible={selected}`).
+  - Enforced minimum resizing dimensions (`minWidth={60}`, `minHeight={30}`) and customized styling (subtle dark border, small handles) matching the editor's dark theme.
+  - Implemented inline double-click editing on node labels that dynamically reveals a focused, auto-selecting `<textarea>`.
+  - Added event bubbling prevention using `.nodrag` and `.nopan` classes and custom keydown interception so interactions do not drag nodes or pan the canvas.
+  - Configured state updates to propagate typed values to `data.label` inside the collaborative React Flow nodes in real-time, syncing automatically through Liveblocks.
+  - Closed editing gracefully on blur, `Escape`, and `Enter` (without Shift).
+  - Verified Next.js build compilation and type-checking are fully clean using `npm run build`.
+
+- Implemented Phase 13: Node Shape feature:
+  - Replaced the placeholder canvas node shape renderer in `components/editor/canvas-node.tsx` with proper shape rendering:
+    - CSS styling for `rectangle` (rounded corner container), `circle` (rounded-full), and `pill` (rounded-full capsule).
+    - Responsive scaling SVGs with `vector-effect="non-scaling-stroke"` for `diamond` (4-point polygon), `hexagon` (6-point flat top/bottom polygon), and `cylinder` (database cylinder shape with top ellipse outline).
+  - Centered text labels on top of CSS and SVG background shapes.
+  - Linked selection state to border outline brightness (subtle at rest, brighter on selection).
+  - Added HTML5 shape drag previews in `components/editor/collaborative-canvas.tsx` by pre-rendering off-screen preview templates for each shape type and binding them using `event.dataTransfer.setDragImage`.
+  - Verified compilation and type checking are fully clean with `npm run build`.
 
 - Implemented Phase 12: Shape Panel feature:
   - Created custom node rendering component `components/editor/canvas-node.tsx` supporting border styling based on node color, empty label placeholders, and 4-way handles (Top, Bottom, Left, Right).

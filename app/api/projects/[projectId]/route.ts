@@ -57,35 +57,49 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
+  console.log("[DELETE API] Hit with params");
   const { userId } = await auth();
+  console.log("[DELETE API] Authenticated userId:", userId);
   if (!userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const { projectId } = await params;
+    console.log("[DELETE API] Target projectId:", projectId);
 
-    // Perform atomic delete restricted to owner
-    const result = await prisma.project.deleteMany({
-      where: {
-        id: projectId,
-        ownerId: userId,
-      },
+    // Check project existence and ownership
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
     });
 
-    if (result.count === 0) {
-      const exists = await prisma.project.findUnique({
-        where: { id: projectId },
-      });
-      if (!exists) {
-        return Response.json({ error: "Project not found" }, { status: 404 });
-      }
+    console.log("[DELETE API] Found project:", project ? { id: project.id, ownerId: project.ownerId, name: project.name } : null);
+
+    if (!project) {
+      console.log("[DELETE API] Project not found");
+      return Response.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    if (project.ownerId !== userId) {
+      console.log("[DELETE API] Owner mismatch! project.ownerId:", project.ownerId, "userId:", userId);
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    console.log("[DELETE API] Executing deletion transaction...");
+    // Perform transaction delete to clear collaborators and the project safely
+    await prisma.$transaction([
+      prisma.projectCollaborator.deleteMany({
+        where: { projectId },
+      }),
+      prisma.project.delete({
+        where: { id: projectId },
+      }),
+    ]);
+    console.log("[DELETE API] Deletion transaction completed successfully!");
+
     return Response.json({ success: true });
   } catch (error) {
-    console.error("Error deleting project:", error);
+    console.error("[DELETE API] Error deleting project:", error);
     return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
