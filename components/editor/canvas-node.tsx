@@ -249,28 +249,59 @@ export function CanvasNodeComponent({ id, data, selected }: NodeProps<CanvasNode
       </div>
 
       {/* Connection Handles - hidden by default, visible on hover */}
+      {/* Top Handle */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top-target"
+        className="w-1.5 h-1.5 !bg-white border border-zinc-950 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:scale-125"
+      />
       <Handle
         type="source"
         position={Position.Top}
-        id="top"
+        id="top-source"
+        className="w-1.5 h-1.5 !bg-white border border-zinc-950 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:scale-125"
+      />
+
+      {/* Bottom Handle */}
+      <Handle
+        type="target"
+        position={Position.Bottom}
+        id="bottom-target"
         className="w-1.5 h-1.5 !bg-white border border-zinc-950 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:scale-125"
       />
       <Handle
         type="source"
         position={Position.Bottom}
-        id="bottom"
+        id="bottom-source"
+        className="w-1.5 h-1.5 !bg-white border border-zinc-950 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:scale-125"
+      />
+
+      {/* Left Handle */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left-target"
         className="w-1.5 h-1.5 !bg-white border border-zinc-950 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:scale-125"
       />
       <Handle
         type="source"
         position={Position.Left}
-        id="left"
+        id="left-source"
+        className="w-1.5 h-1.5 !bg-white border border-zinc-950 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:scale-125"
+      />
+
+      {/* Right Handle */}
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="right-target"
         className="w-1.5 h-1.5 !bg-white border border-zinc-950 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:scale-125"
       />
       <Handle
         type="source"
         position={Position.Right}
-        id="right"
+        id="right-source"
         className="w-1.5 h-1.5 !bg-white border border-zinc-950 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:scale-125"
       />
     </div>

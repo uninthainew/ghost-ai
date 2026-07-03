@@ -9,9 +9,13 @@ import {
   BackgroundVariant,
   useReactFlow,
   MarkerType,
+  useViewport,
+  useNodes,
+  useEdges,
 } from "@xyflow/react"
 import { useLiveblocksFlow } from "@liveblocks/react-flow"
-import { useUndo, useRedo, useCanUndo, useCanRedo } from "@liveblocks/react"
+import { useUndo, useRedo, useCanUndo, useCanRedo, useOthers, useUpdateMyPresence } from "@liveblocks/react"
+import { useUser, UserButton } from "@clerk/nextjs"
 import { Square, Circle, Hexagon, Diamond, Pill, Cylinder, ZoomIn, ZoomOut, Maximize, Undo, Redo, LayoutTemplate } from "lucide-react"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import { CanvasNodeComponent } from "./canvas-node"
@@ -19,7 +23,164 @@ import { CustomEdge } from "./custom-edge"
 import type { CanvasNode, CanvasEdge } from "@/types/canvas"
 import { StarterTemplateModal } from "./starter-template-modal"
 import { type CanvasTemplate } from "./starter-template"
+import { useProjectDialogs } from "@/components/editor/project-context"
+import { useCanvasAutosave } from "@/hooks/useCanvasAutosave"
 import "@xyflow/react/dist/style.css"
+
+const getInitials = (name?: string) => {
+  if (!name) return "?"
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+  }
+  return name.slice(0, 2).toUpperCase()
+}
+
+interface LiveCursorsProps {
+  currentUserId?: string
+}
+
+function LiveCursors({ currentUserId }: LiveCursorsProps) {
+  const { x: transformX, y: transformY, zoom } = useViewport()
+
+  const cursors = useOthers(
+    (others) =>
+      others
+        .filter((other) => other.id !== currentUserId && other.presence?.cursor)
+        .map((other) => ({
+          connectionId: other.connectionId,
+          name: other.info?.name || "Collaborator",
+          color: other.info?.color || "#3b82f6",
+          cursor: other.presence.cursor!,
+        })),
+    (a, b) => {
+      if (a.length !== b.length) return false
+      for (let i = 0; i < a.length; i++) {
+        if (a[i].connectionId !== b[i].connectionId) return false
+        if (a[i].name !== b[i].name) return false
+        if (a[i].color !== b[i].color) return false
+        if (a[i].cursor.x !== b[i].cursor.x) return false
+        if (a[i].cursor.y !== b[i].cursor.y) return false
+      }
+      return true
+    }
+  )
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+      {cursors.map(({ connectionId, name, color, cursor }) => {
+        const screenX = cursor.x * zoom + transformX
+        const screenY = cursor.y * zoom + transformY
+        return (
+          <div
+            key={connectionId}
+            className="absolute left-0 top-0 pointer-events-none transition-transform duration-75 ease-out"
+            style={{
+              transform: `translate(${screenX}px, ${screenY}px)`,
+            }}
+          >
+            <svg
+              className="h-5 w-5 drop-shadow-md"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z"
+                fill={color}
+                stroke="white"
+                strokeWidth={1.5}
+                strokeLinejoin="round"
+              />
+            </svg>
+            <div
+              className="ml-4 mt-1 px-2.5 py-1 text-xs font-semibold text-white rounded-lg shadow-lg whitespace-nowrap animate-in fade-in-50 zoom-in-95 duration-150 border border-white/10 backdrop-blur-sm bg-opacity-95"
+              style={{
+                backgroundColor: color,
+              }}
+            >
+              {name}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+interface CollaboratorAvatarStackProps {
+  currentUserId?: string
+}
+
+function CollaboratorAvatarStack({ currentUserId }: CollaboratorAvatarStackProps) {
+  const collaborators = useOthers(
+    (others) =>
+      others
+        .filter((other) => other.id !== currentUserId)
+        .map((other) => ({
+          connectionId: other.connectionId,
+          id: other.id,
+          info: other.info,
+        })),
+    (a, b) => {
+      if (a.length !== b.length) return false
+      for (let i = 0; i < a.length; i++) {
+        if (a[i].connectionId !== b[i].connectionId) return false
+        if (a[i].id !== b[i].id) return false
+        if (a[i].info?.name !== b[i].info?.name) return false
+        if (a[i].info?.avatar !== b[i].info?.avatar) return false
+        if (a[i].info?.color !== b[i].info?.color) return false
+      }
+      return true
+    }
+  )
+
+  const visibleCollaborators = collaborators.slice(0, 5)
+  const overflowCount = collaborators.length - 5
+
+  return (
+    <div className="absolute top-4 right-4 z-30 flex items-center gap-3 bg-[#18181c]/80 backdrop-blur-md border border-zinc-800/60 px-3 py-1.5 rounded-full shadow-xl select-none animate-in fade-in-50 slide-in-from-top-2 duration-300">
+      {collaborators.length > 0 && (
+        <div className="flex -space-x-2">
+          {visibleCollaborators.map((other) => (
+            <div
+              key={other.connectionId}
+              className="relative w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ring-2 ring-[#121214] select-none text-white shrink-0"
+              style={{ backgroundColor: other.info?.color || "#3b82f6" }}
+              title={other.info?.name || "Collaborator"}
+            >
+              {getInitials(other.info?.name)}
+              {other.info?.avatar && (
+                <img
+                  src={other.info.avatar}
+                  alt={other.info.name}
+                  className="absolute inset-0 w-full h-full rounded-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).remove()
+                  }}
+                />
+              )}
+            </div>
+          ))}
+          {overflowCount > 0 && (
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold bg-zinc-800 text-zinc-300 ring-2 ring-[#121214] shrink-0 select-none"
+              title={`${overflowCount} more collaborators`}
+            >
+              +{overflowCount}
+            </div>
+          )}
+        </div>
+      )}
+      {collaborators.length > 0 && (
+        <div className="w-[1px] h-5 bg-zinc-800" />
+      )}
+      <div className="shrink-0 flex items-center justify-center w-8 h-8">
+        <UserButton appearance={{ elements: { avatarBox: "h-8 w-8" } }} />
+      </div>
+    </div>
+  )
+}
 
 const nodeTypes = {
   canvasNode: CanvasNodeComponent,
@@ -63,13 +224,23 @@ const onDragStart = (event: React.DragEvent, shape: string) => {
   }
 }
 
-export function CollaborativeCanvas() {
+interface CollaborativeCanvasProps {
+  project: {
+    id: string
+    name: string
+    description?: string | null
+    cancasJsonPath?: string | null
+  }
+}
+
+export function CollaborativeCanvas({ project }: CollaborativeCanvasProps) {
   const {
     nodes,
     edges,
     onNodesChange,
     onEdgesChange,
     onConnect,
+    onDelete,
   } = useLiveblocksFlow<CanvasNode, CanvasEdge>({
     suspense: true,
     nodes: {
@@ -80,9 +251,85 @@ export function CollaborativeCanvas() {
     },
   })
 
+  const allNodes = useNodes()
+  const allEdges = useEdges()
+
   const reactFlowInstance = useReactFlow()
   const { screenToFlowPosition, zoomIn, zoomOut, fitView } = reactFlowInstance
   const nodeCounterRef = React.useRef(0)
+  const canvasRef = React.useRef<HTMLDivElement>(null)
+
+  const { setSaveStatus } = useProjectDialogs()
+  const [isInitialLoadDone, setIsInitialLoadDone] = React.useState(false)
+
+  // 1. Initial Load of saved state from Vercel Blob (only if room is empty)
+  React.useEffect(() => {
+    if (isInitialLoadDone) return
+
+    const loadInitialCanvas = async () => {
+      try {
+        const currentNodes = reactFlowInstance.getNodes()
+        const currentEdges = reactFlowInstance.getEdges()
+        const isRoomEmpty = currentNodes.length === 0 && currentEdges.length === 0
+
+        if (!isRoomEmpty) {
+          setIsInitialLoadDone(true)
+          return
+        }
+
+        if (project.cancasJsonPath) {
+          const res = await fetch(`/api/projects/${project.id}/canvas`)
+          if (res.ok) {
+            const data = await res.json()
+            
+            // Re-verify room is still empty after async fetch
+            const postFetchNodes = reactFlowInstance.getNodes()
+            const postFetchEdges = reactFlowInstance.getEdges()
+            const isStillEmpty = postFetchNodes.length === 0 && postFetchEdges.length === 0
+
+            if (isStillEmpty && data && (data.nodes || data.edges)) {
+              reactFlowInstance.setNodes(data.nodes || [])
+              reactFlowInstance.setEdges(data.edges || [])
+              
+              if (data.nodes && data.nodes.length > 0) {
+                setTimeout(() => {
+                  fitView({ padding: 0.2, duration: 400 })
+                }, 50)
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error loading initial canvas from Vercel Blob:", err)
+      } finally {
+        setIsInitialLoadDone(true)
+      }
+    }
+
+    loadInitialCanvas()
+  }, [project.id, project.cancasJsonPath, reactFlowInstance, fitView, isInitialLoadDone])
+
+  // 2. Autosave watcher
+  useCanvasAutosave(project.id, nodes, edges, isInitialLoadDone, setSaveStatus)
+
+  const { user } = useUser()
+  const currentUserId = user?.id
+  const updateMyPresence = useUpdateMyPresence()
+
+  const onMouseMove = React.useCallback(
+    (event: React.MouseEvent) => {
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      })
+      updateMyPresence({ cursor: position })
+    },
+    [screenToFlowPosition, updateMyPresence]
+  )
+
+  const onMouseLeave = React.useCallback(() => {
+    updateMyPresence({ cursor: null })
+  }, [updateMyPresence])
 
   const undo = useUndo()
   const redo = useRedo()
@@ -95,7 +342,6 @@ export function CollaborativeCanvas() {
 
   const handleImportTemplate = React.useCallback(
     (template: CanvasTemplate) => {
-      // Replace nodes & edges
       reactFlowInstance.setNodes(template.nodes)
       reactFlowInstance.setEdges(template.edges)
 
@@ -121,10 +367,15 @@ export function CollaborativeCanvas() {
 
       const { shape, width, height } = JSON.parse(payload)
 
-      const position = screenToFlowPosition({
+      const flowPosition = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       })
+
+      const position = {
+        x: flowPosition.x - width / 2,
+        y: flowPosition.y - height / 2,
+      }
 
       nodeCounterRef.current += 1
       const id = `${shape}_${Date.now()}_${nodeCounterRef.current}`
@@ -147,11 +398,51 @@ export function CollaborativeCanvas() {
     [screenToFlowPosition, onNodesChange]
   )
 
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement
+      
+      // Ignore if typing in editable element
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable ||
+        target.closest("[contenteditable]")
+      ) {
+        return
+      }
+
+      if (event.key === "Delete" || event.key === "Backspace") {
+        // Verify target is inside canvas wrapper OR focus is on body (general viewport shortcut)
+        const isInsideCanvas = canvasRef.current?.contains(target)
+        if (!isInsideCanvas && target !== document.body) {
+          return
+        }
+
+        const selectedNodes = allNodes.filter((n) => n.selected) as unknown as CanvasNode[]
+        const selectedEdges = allEdges.filter((e) => e.selected) as unknown as CanvasEdge[]
+
+        if (selectedNodes.length > 0 || selectedEdges.length > 0) {
+          event.preventDefault()
+          onDelete({ nodes: selectedNodes, edges: selectedEdges })
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [allNodes, allEdges, onDelete])
+
   return (
     <div
+      ref={canvasRef}
       className="w-full h-full relative"
       onDragOver={onDragOver}
       onDrop={onDrop}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
     >
       <ReactFlow
         nodes={nodes}
@@ -163,8 +454,7 @@ export function CollaborativeCanvas() {
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         connectionMode={ConnectionMode.Loose}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
+        deleteKeyCode={null}
         colorMode="dark"
         className="bg-[#121214]"
       >
@@ -422,6 +712,12 @@ export function CollaborativeCanvas() {
           </svg>
         </div>
       </div>
+
+      {/* Live Cursors Overlay */}
+      <LiveCursors currentUserId={currentUserId} />
+
+      {/* Collaborator Avatar Stack */}
+      <CollaboratorAvatarStack currentUserId={currentUserId} />
 
       {/* Starter Template Modal */}
       <StarterTemplateModal

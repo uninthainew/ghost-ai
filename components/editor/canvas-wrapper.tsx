@@ -7,7 +7,12 @@ import { CanvasErrorBoundary } from "./canvas-error-boundary"
 import { CollaborativeCanvas } from "./collaborative-canvas"
 
 interface CanvasWrapperProps {
-  roomId: string
+  project: {
+    id: string
+    name: string
+    description?: string | null
+    cancasJsonPath?: string | null
+  }
 }
 
 function CanvasLoading() {
@@ -24,20 +29,20 @@ function CanvasLoading() {
 // Match feature spec expected name
 const ClientSuspense = ClientSideSuspense
 
-export function CanvasWrapper({ roomId }: CanvasWrapperProps) {
+export function CanvasWrapper({ project }: CanvasWrapperProps) {
   return (
     <CanvasErrorBoundary>
       <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
         <RoomProvider
-          id={roomId}
+          id={project.id}
           initialPresence={{
             cursor: null,
-            isThinking: false,
+            thinking: false,
           }}
         >
           <ReactFlowProvider>
             <ClientSuspense fallback={<CanvasLoading />}>
-              <CollaborativeCanvas />
+              <CollaborativeCanvas project={project} />
             </ClientSuspense>
           </ReactFlowProvider>
         </RoomProvider>

@@ -4,7 +4,7 @@ import * as React from "react"
 import { useParams } from "next/navigation"
 import { useProjectDialogs } from "@/components/editor/project-context"
 import { Button } from "@/components/ui/button"
-import { PanelLeftOpen, PanelLeftClose, Share2, Sparkles } from "lucide-react"
+import { PanelLeftOpen, PanelLeftClose, Share2, Sparkles, Cloud, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { cn } from "@/lib/utils"
 
@@ -17,7 +17,7 @@ interface EditorNavbarProps {
 
 export function EditorNavbar({ sidebarOpen: propSidebarOpen, onToggleSidebar: propOnToggleSidebar }: EditorNavbarProps) {
   const params = useParams()
-  const { projects, isAiOpen, toggleAiSidebar, isSidebarOpen, setSidebarOpen, openShareDialog } = useProjectDialogs()
+  const { projects, isAiOpen, toggleAiSidebar, isSidebarOpen, setSidebarOpen, openShareDialog, saveStatus, manualSaveRef } = useProjectDialogs()
 
   const sidebarOpen = propSidebarOpen !== undefined ? propSidebarOpen : isSidebarOpen
   const onToggleSidebar = propOnToggleSidebar || (() => setSidebarOpen(!isSidebarOpen))
@@ -69,6 +69,39 @@ export function EditorNavbar({ sidebarOpen: propSidebarOpen, onToggleSidebar: pr
       <div className="flex items-center gap-2.5 justify-end">
         {activeProject && (
           <>
+            {/* Save Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5 rounded-lg border-border/40 font-medium"
+              disabled={saveStatus === "saving"}
+              onClick={() => {
+                manualSaveRef.current?.()
+              }}
+            >
+              {saveStatus === "saving" ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                  <span>saving...</span>
+                </>
+              ) : saveStatus === "saved" ? (
+                <>
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>saved</span>
+                </>
+              ) : saveStatus === "error" ? (
+                <>
+                  <AlertCircle className="h-3.5 w-3.5 text-rose-400" />
+                  <span>Error</span>
+                </>
+              ) : (
+                <>
+                  <Cloud className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>Save</span>
+                </>
+              )}
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
@@ -102,9 +135,11 @@ export function EditorNavbar({ sidebarOpen: propSidebarOpen, onToggleSidebar: pr
             <div className="w-[1px] h-5 bg-border/40 mx-0.5 shrink-0" />
           </>
         )}
-        <div className="shrink-0 flex items-center justify-center">
-          <UserButton />
-        </div>
+        {!activeProject && (
+          <div className="shrink-0 flex items-center justify-center">
+            <UserButton />
+          </div>
+        )}
       </div>
     </header>
   )

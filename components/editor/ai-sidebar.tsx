@@ -1,0 +1,394 @@
+"use client"
+
+import * as React from "react"
+import { Bot, Sparkles, Send, X, FileText, Download } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
+
+interface Message {
+  role: "user" | "assistant"
+  content: string
+}
+
+interface SpecItem {
+  id: string
+  title: string
+  snippet: string
+  date: string
+}
+
+interface AiSidebarProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
+  const [activeTab, setActiveTab] = React.useState<"architect" | "specs">("architect")
+  const [aiInput, setAiInput] = React.useState("")
+  const [messages, setMessages] = React.useState<Message[]>([])
+  const [isThinking, setIsThinking] = React.useState(false)
+  const [isGeneratingSpec, setIsGeneratingSpec] = React.useState(false)
+  
+  const [specs, setSpecs] = React.useState<SpecItem[]>([
+    {
+      id: "demo-1",
+      title: "system-architecture-spec.md",
+      snippet: "System Specification for Ghost AI Workspace. Includes microservice integrations, API gateways, database clusters, and load balancers.",
+      date: "July 2, 2026"
+    }
+  ])
+
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+  const chatEndRef = React.useRef<HTMLDivElement>(null)
+
+  // Scroll to bottom helper
+  const scrollToBottom = React.useCallback(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [])
+
+  // Auto-resize textarea height
+  React.useEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    textarea.style.height = "auto"
+    textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 72), 160)}px`
+  }, [aiInput])
+
+  // Scroll on new messages or thinking status
+  React.useEffect(() => {
+    scrollToBottom()
+  }, [messages, isThinking, scrollToBottom])
+
+  const starterChips = [
+    "Design an e-commerce backend",
+    "Create a chat app architecture",
+    "Build a CI/CD pipeline"
+  ]
+
+  const handleChipClick = (chipText: string) => {
+    setAiInput(chipText)
+    textareaRef.current?.focus()
+  }
+
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    if (!aiInput.trim()) return
+
+    const userText = aiInput.trim()
+    setMessages((prev) => [...prev, { role: "user", content: userText }])
+    setAiInput("")
+    setIsThinking(true)
+
+    // Simulate response delay
+    setTimeout(() => {
+      setIsThinking(false)
+      let responseText = ""
+
+      const lowerText = userText.toLowerCase()
+      if (lowerText.includes("e-commerce")) {
+        responseText = `### E-Commerce Backend Architecture
+
+I've outlined a scalable microservices structure for your e-commerce system:
+
+1. **API Gateway**: Entry point routing requests.
+2. **Auth Service**: User sign-ups, login, and JWT issues.
+3. **Product Catalog**: Handles item search and details.
+4. **Order Service**: Manages carts, payments, and checkout flows.
+
+Would you like me to draw this schema on the canvas?`
+      } else if (lowerText.includes("chat")) {
+        responseText = `### Chat App Architecture
+
+Here is the design for a real-time messaging system:
+
+- **WebSockets Server**: Handles persistent duplex connections.
+- **Message Broker (Redis Pub/Sub)**: Scales messages across node instances.
+- **Database (PostgreSQL)**: Stores conversation history and user info.
+
+I can help generate a node diagram for this flow.`
+      } else if (lowerText.includes("pipeline") || lowerText.includes("ci/cd")) {
+        responseText = `### CI/CD Pipeline Flow
+
+A standard modern pipeline consists of these stages:
+
+1. **Trigger**: Git commit/push.
+2. **Build**: Docker build & lint.
+3. **Test**: Run unit and integration tests.
+4. **Deploy**: Push image to registry and roll out to AWS ECS/EKS.
+
+Let me know if you want to initialize these nodes!`
+      } else {
+        responseText = `Thanks for your message! I'm here as the AI Architect.
+
+I can assist with:
+- System architectures & microservices
+- Database schema design & modeling
+- CI/CD build flows and infrastructure layout
+
+Try choosing one of the starter templates or let me know what diagram blocks you'd like to add!`
+      }
+
+      setMessages((prev) => [...prev, { role: "assistant", content: responseText }])
+    }, 1000)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit()
+    }
+  }
+
+  const handleGenerateSpec = () => {
+    setIsGeneratingSpec(true)
+    setTimeout(() => {
+      setIsGeneratingSpec(false)
+      const newSpec: SpecItem = {
+        id: `spec-${Date.now()}`,
+        title: `spec-${Math.floor(Math.random() * 10000)}.md`,
+        snippet: `Automated architecture specification generated by Ghost AI Architect. Core systems include authentication, state replication, and message queues.`,
+        date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      }
+      setSpecs((prev) => [newSpec, ...prev])
+    }, 1000)
+  }
+
+  return (
+    <aside
+      className={cn(
+        "h-full w-85 border-l border-surface-border bg-base/95 text-card-foreground flex flex-col shrink-0 transition-all duration-300 ease-in-out shadow-2xl relative z-20",
+        isOpen ? "translate-x-0 mr-0" : "translate-x-full absolute right-0"
+      )}
+      style={{ display: isOpen ? "flex" : "none" }}
+    >
+      {/* Sidebar Header */}
+      <div className="flex h-14 items-center justify-between px-4 border-b border-surface-border shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-brand-dim border border-brand/20">
+            <Bot className="h-4 w-4 text-accent-text" />
+          </div>
+          <div>
+            <h3 className="font-heading text-sm font-semibold tracking-tight text-primary-text leading-tight">
+              AI Workspace
+            </h3>
+            <p className="text-[10px] text-secondary-text leading-none mt-0.5">
+              Collaborator with Ghost AI
+            </p>
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={onClose}
+          className="text-secondary-text hover:text-primary-text hover:bg-suble"
+        >
+          <X className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
+      {/* Tabs Layout */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as any)}
+        className="flex flex-col flex-1 overflow-hidden"
+      >
+        <TabsList variant="line" className="flex w-full bg-suble border-b border-surface-border rounded-none h-10 p-1 gap-1 shrink-0">
+          <TabsTrigger
+            value="architect"
+            className="flex-1 text-muted-text data-active:bg-accent data-active:text-accent rounded-md py-1 text-xs font-semibold"
+          >
+            AI Architect
+          </TabsTrigger>
+          <TabsTrigger
+            value="specs"
+            className="flex-1 text-muted-text data-active:bg-accent data-active:text-accent rounded-md py-1 text-xs font-semibold"
+          >
+            Specs
+          </TabsTrigger>
+        </TabsList>
+
+        {/* AI Architect Tab Panel */}
+        <TabsContent value="architect" className="flex-1 flex flex-col overflow-hidden outline-none">
+          {/* Scrollable Chat Area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col">
+            {messages.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-4">
+                <div className="p-3.5 rounded-full bg-brand-dim border border-brand/20 text-accent-text animate-pulse">
+                  <Bot className="h-8 w-8" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-semibold text-sm text-primary-text">Ghost AI Architect</h4>
+                  <p className="text-xs text-secondary-text max-w-[200px]">
+                    Ask me to design schemas, build pipelines, or draft architecture diagrams.
+                  </p>
+                </div>
+
+                {/* Starter chips */}
+                <div className="w-full pt-4 space-y-2">
+                  {starterChips.map((chip, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleChipClick(chip)}
+                      className="w-full text-left px-3 py-2 text-xs font-medium bg-suble text-accent-text rounded-xl border border-surface-border hover:bg-brand-dim transition-all duration-200"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={cn(
+                    "flex gap-2.5 items-start",
+                    msg.role === "user" ? "justify-end" : "justify-start"
+                  )}
+                >
+                  {msg.role === "assistant" && (
+                    <div className="p-1.5 rounded-lg bg-brand-dim border border-brand/20 shrink-0 mt-0.5">
+                      <Bot className="h-4 w-4 text-accent-text" />
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed max-w-[80%] whitespace-pre-wrap shadow-sm",
+                      msg.role === "user"
+                        ? "bg-brand-dim border border-brand/50 border-2 text-copy-primary rounded-tr-sm"
+                        : "bg-elevated border border-surface-border text-accent-text rounded-tl-sm prose prose-invert prose-xs"
+                    )}
+                  >
+                    {msg.content}
+                  </div>
+                </div>
+              ))
+            )}
+
+            {isThinking && (
+              <div className="flex justify-start gap-2.5 items-start">
+                <div className="p-1.5 rounded-lg bg-brand-dim border border-brand/20 shrink-0 mt-0.5">
+                  <Bot className="h-4 w-4 text-accent-text" />
+                </div>
+                <div className="bg-elevated border border-surface-border text-accent-text rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm flex items-center gap-1.5 shadow-sm">
+                  <span className="w-1.5 h-1.5 bg-accent-text rounded-full animate-bounce duration-300" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 bg-accent-text rounded-full animate-bounce duration-300" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 bg-accent-text rounded-full animate-bounce duration-300" style={{ animationDelay: "300ms" }} />
+                </div>
+              </div>
+            )}
+            
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Quick Action Suggestion Prompts if messages exist */}
+          {messages.length > 0 && (
+            <div className="px-4 pb-2 pt-1 shrink-0 flex flex-wrap gap-1.5">
+              <button
+                onClick={() => handleChipClick("Add a Redis cache layer")}
+                className="px-2 py-1 text-[10px] font-medium bg-suble text-accent-text rounded-lg border border-surface-border hover:bg-brand-dim transition-all"
+              >
+                + Add Redis Cache
+              </button>
+              <button
+                onClick={() => handleChipClick("Design a scalable AWS VPC setup")}
+                className="px-2 py-1 text-[10px] font-medium bg-suble text-accent-text rounded-lg border border-surface-border hover:bg-brand-dim transition-all"
+              >
+                + AWS VPC Setup
+              </button>
+            </div>
+          )}
+
+          {/* Message Input Area */}
+          <div className="p-4 border-t border-surface-border bg-suble shrink-0">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleSubmit()
+              }}
+              className="relative flex flex-col gap-2"
+            >
+              <label htmlFor="workspace-ai-input" className="sr-only">
+                Ask Ghost AI
+              </label>
+              <div className="relative flex items-center">
+                <Textarea
+                  ref={textareaRef}
+                  id="workspace-ai-input"
+                  placeholder="Ask Ghost AI..."
+                  value={aiInput}
+                  onChange={(e) => setAiInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full bg-base/50 border border-surface-border rounded-xl pl-3 pr-10 py-2.5 text-sm placeholder:text-muted-text focus:outline-none focus:border-brand/50 focus:ring-1 focus:ring-brand/50 transition-all font-medium field-sizing-content min-h-[72px] max-h-[160px] resize-none"
+                />
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="icon-xs"
+                  className="absolute right-2.5 bottom-2.5 text-secondary-text hover:text-primary-text hover:bg-suble h-7 w-7 rounded-lg"
+                  disabled={!aiInput.trim()}
+                >
+                  <Send className="h-3.5 w-3.5 text-accent-text" />
+                </Button>
+              </div>
+            </form>
+          </div>
+        </TabsContent>
+
+        {/* Specs Tab Panel */}
+        <TabsContent value="specs" className="flex-1 flex flex-col p-4 space-y-4 overflow-y-auto outline-none">
+          <Button
+            onClick={handleGenerateSpec}
+            disabled={isGeneratingSpec}
+            className="w-full bg-accent text-white font-semibold hover:opacity-90 h-9 rounded-lg flex items-center justify-center gap-2"
+          >
+            {isGeneratingSpec ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Generating Spec...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Generate Spec
+              </>
+            )}
+          </Button>
+
+          <div className="space-y-3">
+            {specs.map((spec) => (
+              <div
+                key={spec.id}
+                className="p-3 bg-elevated border border-surface-border rounded-xl space-y-2 shadow-sm relative group hover:border-brand/35 transition-all duration-200 animate-in fade-in-50"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-brand-dim text-accent-text">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-xs text-primary-text">{spec.title}</h4>
+                      <p className="text-[9px] text-secondary-text">{spec.date}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    disabled
+                    className="opacity-40 cursor-not-allowed text-secondary-text"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <p className="text-xs text-secondary-text line-clamp-2 leading-relaxed">
+                  {spec.snippet}
+                </p>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </aside>
+  )
+}

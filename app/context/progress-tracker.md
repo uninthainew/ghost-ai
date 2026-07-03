@@ -5,13 +5,46 @@ change.
 
 ## Current Phase
 
-- Completed (Phase 18: Starter Template Library)
+- Completed (Phase 21: Canvas Auto-Save)
 
 ## Current Goal
 
-- Ready for next spec instructions.
+- Ready for next instructions.
 
 ## Completed
+
+- Implemented Phase 21: Canvas Auto-Save:
+  - Installed and configured `@vercel/blob` package.
+  - Corrected syntax declaration error of `BLOB_READ_WRITE_TOKEN` in `.env.local`.
+  - Created backend API routes `app/api/projects/[projectId]/canvas/route.ts` supporting `PUT` (for autosaving latest canvas JSON to Vercel Blob and storing URL in Prisma) and `GET` (for fetching saved canvas JSON from Vercel Blob).
+  - Exposed `saveStatus` (`"idle" | "saving" | "saved" | "error"`) via `ProjectProvider` context inside `components/editor/project-context.tsx`.
+  - Implemented the `useCanvasAutosave` custom React hook in `hooks/useCanvasAutosave.ts` that watches `nodes`/`edges` state, skips duplicates, debounces saves by `2500ms`, and reports status.
+  - Refactored `app/editor/[roomId]/workspace-view.tsx` and `components/editor/canvas-wrapper.tsx` to pass the full `project` metadata down.
+  - Implemented initial canvas loading in `components/editor/collaborative-canvas.tsx` when room is empty, skipping loading if active collaboration exists to avoid overwrite race conditions.
+  - Added a premium, responsive save status indicator badge in the `EditorNavbar` displaying animated/colored indicators for Saving, Saved, and Error states.
+
+
+- Implemented Phase 20: AI Sidebar Shell:
+  - Created standalone `<AiSidebar>` component in `components/editor/ai-sidebar.tsx`.
+  - Added new CSS variables for custom styling theme tokens (`--base`, `--surface-border`, `--primary-text`, `--secondary-text`, `--muted-text`, `--accent-text`, `--brand-dim`, `--brand`, `--copy-primary`, `--elevated`, `--subtle`) to `app/globals.css` mapping under `@theme inline` for Tailwind CSS v4 utility classes.
+  - Implemented the header with bot icon, `AI Workspace` title, and subtitle aligned to a close button.
+  - Added a `<Tabs>` navigation layout for "AI Architect" and "Specs".
+  - Implemented the interactive AI Architect chat interface:
+    - Empty state with Bot icon, description, and starter prompt pills that populate the input.
+    - Chat message list displaying user messages (right-aligned, branded borders) and assistant replies (left-aligned, elevated styling).
+    - Simulated response generator mapping topics (e-commerce, chat app, CI/CD pipeline) to template summaries with a typing indicator.
+    - Auto-resizing `<textarea>` adapting height from 72px to 160px using React ref and DOM manipulation, submitting on `Enter` and adding newlines on `Shift+Enter`.
+  - Implemented the Specs tab allowing generation of mock specification cards with details, snippet previews, and disabled download controls.
+  - Integrated `<AiSidebar>` inside `app/editor/[roomId]/workspace-view.tsx` replacing the static layout mockup.
+
+- Implemented Phase 19: Presence, Avatar, and Cursor:
+  - Updated `liveblocks.config.ts` defining `Presence` type to include `thinking: boolean` (replacing `isThinking: boolean`).
+  - Updated `components/editor/canvas-wrapper.tsx` initializing presence with `thinking: false`.
+  - Updated `components/editor/editor-navbar.tsx` to conditionally hide Clerk's `UserButton` in the room view.
+  - Implemented `<LiveCursors>` rendering active collaborator cursors and name badges matching their presence colors, updated via React Flow's `onMouseMove` events (converted using `screenToFlowPosition`) and cleared on `onMouseLeave`.
+  - Implemented `<CollaboratorAvatarStack>` displaying up to 5 overlapping collaborator avatars with fallback to Clerk's user profile photo, initials, and an overflow chip `+N`.
+  - Positioned the avatar stack inside the canvas workspace at `absolute top-4 right-4 z-30` so it is visually separate from the main navbar actions.
+  - Verified a clean Next.js build compilation.
 
 - Implemented Phase 18: Starter Template Library:
   - Created `components/editor/starter-template.ts` defining `CanvasTemplate` type and `CANVAS_TEMPLAES` array alias.

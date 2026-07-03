@@ -13,6 +13,8 @@ export interface Project {
 
 export type DialogType = "create" | "rename" | "delete" | "share" | null
 
+export type SaveStatus = "idle" | "saving" | "saved" | "error"
+
 export interface DialogState {
   type: DialogType
   project: Project | null
@@ -47,6 +49,9 @@ interface ProjectContextType {
   closeDialog: () => void
   setFormName: (name: string) => void
   handleSubmit: (e?: React.FormEvent) => Promise<void>
+  saveStatus: SaveStatus
+  setSaveStatus: (status: SaveStatus) => void
+  manualSaveRef: React.MutableRefObject<(() => Promise<void>) | null>
 }
 
 const ProjectContext = React.createContext<ProjectContextType | undefined>(undefined)
@@ -61,7 +66,18 @@ export function ProjectProvider({
   const [projects, setProjects] = React.useState<Project[]>(initialProjects)
   const [isAiOpen, setAiOpen] = React.useState(false)
   const [isSidebarOpen, setSidebarOpen] = React.useState(false)
+  const [saveStatus, setSaveStatus] = React.useState<SaveStatus>("idle")
+  const manualSaveRef = React.useRef<(() => Promise<void>) | null>(null)
   const { user } = useUser()
+
+  React.useEffect(() => {
+    if (saveStatus === "saved" || saveStatus === "error") {
+      const timer = setTimeout(() => {
+        setSaveStatus("idle")
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [saveStatus])
 
   const refreshProjects = React.useCallback(async () => {
     if (!user) return
@@ -114,6 +130,9 @@ export function ProjectProvider({
         toggleAiSidebar,
         isSidebarOpen,
         setSidebarOpen,
+        saveStatus,
+        setSaveStatus,
+        manualSaveRef,
         ...actions,
       }}
     >
